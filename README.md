@@ -1,12 +1,12 @@
 # AntOps
-运维自动化集成平台,目前实现CMDB 用户管理 模块
-其他集成模块:
-    自动化配置(ansible)
-    产品迭代构建
-    防火墙
-    负载均衡
-    接入zabbix API
-    docker 容器 管理平台
+运维自动化集成平台,目前实现CMDB 用户管理 模块</br>
+其他集成模块:</br>
+    自动化配置(ansible)</br>
+    产品迭代构建</br>
+    防火墙</br>
+    负载均衡</br>
+    接入zabbix API</br>
+    docker 容器 管理平台</br>
 
 #### host page
 ![host](https://github.com/szlyunnan/AntOps/blob/master/Ant/example/host.png)
