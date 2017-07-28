@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!-- 最开始的base标签 -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Ant</title>
+{#  <link rel="icon" href="/static/dist/img/favicon.ico" type="image/x-icon" />#}
+{#  <link rel="shortcut icon" href="/static/dist/img/favicon.ico" type="image/x-icon"/>#}
+  <!-- Tell the browser to be responsive to screen width -->
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    {% include 'link_css.html' %}
+    {% include 'head_script.html' %}
+    {% block self_head_css_js %} {% endblock %}
+<script>
+    $(document).ready(function(){
+    $('.loading').fadeOut();
+});
+</script>
+</head>
+<body class="hold-transition skin-yellow-light sidebar-mini">
+<div class="loading"></div>
+<div class="wrapper">
+
+  {% include temp_name %}
+<script type="text/javascript">
+    $('.loading').animate({'width':'10%'},50);  //第一个进度节点
+</script>
+
+  {% include 'main-sidebar.html' %}
+
+<script type="text/javascript">
+    $('.loading').animate({'width':'25%'},50);  //第一个进度节点
+</script>
+
+    {% block content %}{% endblock %}
+
+<script type="text/javascript">
+    $('.loading').animate({'width':'60%'},50);  //第一个进度节点
+</script>
+
+  {% include 'footer.html' %}
+
+<script type="text/javascript">
+    $('.loading').animate({'width':'100%'},50);  //第一个进度节点
+</script>
+
+  <div class="control-sidebar-bg"></div>
+</div>
+
+</body>
+{% block self_footer_js %} {% endblock %}
+</html>

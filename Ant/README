@@ -1,0 +1,201 @@
+# Ant 项目初心是构建一套运维自动化平台
+## 平台中集成
+    CMDB [已实现]
+    自动化配置(ansible)
+    产品迭代构建
+    防火墙
+    负载均衡
+    接入zabbix API
+    docker 容器 管理平台
+    用户管理
+
+目前可用的平台集成模块只有CMDB，用户管理（没有配置权限）
+
+python版本说明：
+服务端：3.x
+客户端：2.x
+
+部署使用：
+客户端：
+配置 server 地址 和 port（服务端监听地址和端口）
+初始化客户端环境：
+运行bin目录下的runIniti.py
+
+runAntClient.py 集成收集模块和向服务端提交数据模块
+
+服务端:
+环境：
+1、MySQL
+2、nginx + uwsgi + django + python3
+
+坑：
+连接数据库模块：python3 使用 pymysql 安装的时候根据自己情况选择，切记别安装到了python2.x 的模块目录下
+我的系统是Centos6.5
+使用epel-release yum源
+yum -y install epel-release
+yum -y install python34
+# pip3 安装 基于setuptools模块
+yum install python34-setuptools -y
+easy_install-3.4 pip
+
+数据库配置：
+Conf/dbConf.py
+数据库：
+创建数据库：
+CREATE DATABASE ant DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+授权：
+grant all privileges on ant.* to 'ant'@% identified by 'ant';
+flush privileges;
+
+# 版本自己选择，我这里使用最新的
+pip3.4 install uwsgi
+pip3.4 install django
+
+编写uwsgi配置文件这里使用xx.ini 路径放哪都行，运行脚本中配置路径即可
+[uwsgi]
+# user and group id
+uid = nginx
+gid = nginx
+
+# listen address:port
+http = 127.0.0.1:9090
+
+# the base directory (full path)
+chdir = /var/www/Ant/Ant
+
+# the local unix socket file than commnuincate to Nginx
+#socket = /path/to/your/project/mysite.sock
+socket = 127.0.0.1:9091
+
+# pid file
+pidfile = /tmp/uwsgi.pid
+
+# Django's wsgi file
+wsgi-file = Ant/wsgi.py
+# module = Ant.wsgi
+
+master = True
+
+# maximum number of worker processes
+processes = 2
+
+# thread numbers startched in each worker process
+threads = 2
+
+# suport threads start
+enable-threads = True
+
+# logfile
+daemonize = /var/log/nginx/ant/uwsgi.log
+
+# clear environment on exit
+vacuum = true
+
+配置nginx：
+#
+# The Ant server
+#
+
+upstream django {
+    server 127.0.0.1:9091;
+}
+
+server {
+    listen       8080;
+    server_name  www.antcc.co;
+    charset     utf-8;
+
+    # Ant server log
+    access_log /var/log/nginx/ant/access.log;
+    error_log  /var/log/nginx/ant/error.log;
+
+    client_max_body_size 75M;
+
+    #location /media  {
+    #    alias /path/to/your/mysite/media;  # your Django project's media files - amend as required
+    #}
+
+    # 这里是项目的静态资源文件：我这里不涉及的图片之类的
+    # 只是简单配置了 css js 文件路径 static 是项目中有的；
+    # uwsgi 启动django项目 它不负责帮忙处理静态资源，就只能交给我们的nginx 来处理了
+    location /static {
+        alias /var/www/Ant/Ant/static; # your Django project's static files - amend as required
+    }
+
+    # Finally, send all non-media requests to the Django server.
+    location / {
+        #uwsgi_pass  127.0.0.1:9091;
+        proxy_pass http://127.0.0.1:9090;
+        include     uwsgi_params; # the uwsgi_params file you installed
+    }
+
+    # 404 page
+    error_page 404 /404.html;
+        location = /40x.html {
+    }
+
+    # 50* page
+    error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+    }
+}
+
+uwsgi 启动脚本 ：注意其中的 变量 主要是文件路径（这里采用shell脚本）
+#!/usr/bin/env bash
+### ant.sh
+####
+ALLPROCESS=4
+UWSGIBIN=/usr/bin/uwsgi
+PROCESSINI=/var/www/Ant/Ant/ant.ini
+
+# start function
+start(){
+  psid=`ps aux | egrep "uwsgi" | egrep -v "grep" | wc -l`
+  if [ $psid -gt ${ALLPROCESS} ];then
+    echo "uwsgi is running..."
+    exit 0
+  else
+    ${UWSGIBIN} --ini ${PROCESSINI}
+    echo "Start uwsgi service [OK]"
+  fi
+}
+
+# stop function
+stop(){
+  pkill -9 uwsgi
+  echo "Stop uwsgi is [OK]"
+}
+
+# reload function
+reload(){
+  ${UWSGIBIN} -s reload ${PROCESSINI}
+  echo "Reload configure is [OK]"
+}
+
+case "$1" in
+  start)
+    start && exit 0
+  ;;
+  stop)
+    stop && exit 0
+  ;;
+  restart)
+    stop
+    start && exit 0
+  ;;
+  reload)
+    reload && exit 0
+  ;;
+  *)
+    echo "Usages: bash $0 [start|stop|restart|reload]"
+  ;;
+esac
+
+# 创建Ant 默认登陆用户（采用django用户管理认证，需要自己创建）
+进入：Ant 项目目录 有 manage.py 那层：
+运行：有输入 email name  password
+python3.4 manage.py createsuperuser
+默认控制了只能使用email登陆：只要创建格式符合email格式即可
+
+# 启动 nginx
+# 启动 uwsgi 服务即可
