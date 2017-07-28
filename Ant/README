@@ -191,6 +191,14 @@ case "$1" in
   ;;
 esac
 
+# 数据库初始化：
+删除每个app下的migrations里面的xxx.initial.py 文件
+# 初始化数据库
+进入：Ant 项目目录 
+python3.4 manage.py makemigrations
+# 同步数据库：
+python3.4 manage.py migrate
+
 # 创建Ant 默认登陆用户（采用django用户管理认证，需要自己创建）
 进入：Ant 项目目录 有 manage.py 那层：
 运行：有输入 email name  password
