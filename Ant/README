@@ -191,6 +191,7 @@ case "$1" in
   ;;
 esac
 
+##
 # 数据库初始化：
 删除每个app下的migrations里面的xxx.initial.py 文件
 # 初始化数据库
